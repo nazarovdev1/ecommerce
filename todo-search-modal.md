@@ -1,4 +1,0 @@
-- [x] Fix modal width from current size to 500px
-- [x] Add sample products with images and prices
-- [x] Update search results display
-- [x] Test the changes

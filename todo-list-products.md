@@ -1,7 +1,0 @@
-- [x] Analyze the current issue - both new collection and bestsellers show placeholder text
-- [ ] Examine the product-card component to understand product display structure
-- [ ] Create sample product data for new collection and bestsellers
-- [ ] Update new-collection.tsx to display actual products
-- [ ] Update bestsellers.tsx to display actual products
-- [ ] Test the changes by running the development server
-- [ ] Verify products display correctly in both sections
