@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useProducts } from '../contexts/ProductContext';
 import { useCart } from '../contexts/CartContext';
 import { ArrowLeft, Star, ShoppingCart, Heart, Plus, Minus } from 'lucide-react';
@@ -36,12 +37,12 @@ const ProductView = () => {
   const handleAddToCart = async () => {
     // Validation
     if (product.colors && product.colors.length > 0 && !selectedColor) {
-      alert('Iltimos, rang tanlang!');
+      toast.error('Iltimos, rang tanlang!', { duration: 6000 });
       return;
     }
 
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert('Iltimos, o\'lcham tanlang!');
+      toast.error('Iltimos, o\'lcham tanlang!', { duration: 6000 });
       return;
     }
 
@@ -49,10 +50,10 @@ const ProductView = () => {
 
     try {
       await addToCart(product, selectedColor, selectedSize, quantity);
-      alert(`"${product.name}" savatga qo'shildi! (${quantity} dona)`);
+      toast.success(`"${product.name}" savatga qo'shildi! (${quantity} dona)`, { duration: 6000 });
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+      toast.error('Xatolik yuz berdi. Qaytadan urinib ko\'ring.', { duration: 6000 });
     } finally {
       setIsAddingToCart(false);
     }

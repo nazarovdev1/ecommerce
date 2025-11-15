@@ -93,9 +93,7 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* Quick add to cart */}
-          <button className="bg-accent hover:bg-accent/90 text-accent-foreground px-4 py-2 rounded-lg font-semibold transition-colors opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-200">
-            Savatga
-          </button>
+          
         </div>
       </div>
     </div>

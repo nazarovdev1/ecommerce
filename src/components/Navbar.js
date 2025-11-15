@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, Search, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
@@ -7,18 +7,19 @@ import { useCart } from '../contexts/CartContext';
 const Navbar = ({ onSearchClick, onCartClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const { totalItems } = useCart();
   const location = useLocation();
+  const navigate = useNavigate();
   const userMenuRef = useRef(null);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   // Smooth scroll to section
   const scrollToSection = (sectionId) => {
-    // If not on home page, navigate to home first
+    // If not on home page, navigate to home with hash
     if (location.pathname !== '/') {
-      window.location.href = `/#${sectionId}`;
+      navigate(`/#${sectionId}`);
       return;
     }
 
@@ -104,14 +105,14 @@ const Navbar = ({ onSearchClick, onCartClick }) => {
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-                  {totalItems > 99 ? '99+' : totalItems}
+                  {totalItems > 9 ? '9+' : totalItems}
                 </span>
               )}
             </button>
 
-            {/* Admin/User */}
+            {/* User Menu */}
             {isAuthenticated ? (
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative pt-1.5" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="text-gray-400 hover:text-white transition-colors"
@@ -120,13 +121,18 @@ const Navbar = ({ onSearchClick, onCartClick }) => {
                 </button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-10">
-                    <Link
-                      to="/admin"
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Admin panel
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Admin panel
+                      </Link>
+                    )}
+                    <div className="px-4 py-2 text-sm text-gray-400 border-t border-gray-700">
+                      Salom, {user?.username}
+                    </div>
                     <button
                       onClick={() => {
                         logout();
@@ -140,12 +146,32 @@ const Navbar = ({ onSearchClick, onCartClick }) => {
                 )}
               </div>
             ) : (
-              <Link
-                to="/admin"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <User className="h-5 w-5" />
-              </Link>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <User className="h-5 w-5" />
+                </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-10">
+                    <Link
+                      to="/login"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Kirish
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Ro'yxatdan o'tish
+                    </Link>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Mobile menu button */}
@@ -171,15 +197,20 @@ const Navbar = ({ onSearchClick, onCartClick }) => {
                   {item.name}
                 </button>
               ))}
-              {isAuthenticated && (
+              {isAuthenticated ? (
                 <>
-                  <Link
-                    to="/admin"
-                    className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Admin panel
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin panel
+                    </Link>
+                  )}
+                  <div className="px-3 py-2 text-sm text-gray-400">
+                    Salom, {user?.username}
+                  </div>
                   <button
                     onClick={() => {
                       logout();
@@ -189,6 +220,23 @@ const Navbar = ({ onSearchClick, onCartClick }) => {
                   >
                     Chiqish
                   </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Kirish
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Ro'yxatdan o'tish
+                  </Link>
                 </>
               )}
             </div>

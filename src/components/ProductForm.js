@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useProducts } from '../contexts/ProductContext';
 import { X, Upload, Save } from 'lucide-react';
 
@@ -20,12 +21,14 @@ const ProductForm = ({ product, onClose }) => {
 
   useEffect(() => {
     if (product) {
+      const images = product.images || [product.image].filter(Boolean);
       setFormData({
         name: product.name || '',
         category: product.category || '',
         price: product.price || '',
         originalPrice: product.originalPrice || '',
-        images: product.images || [product.image].filter(Boolean),
+        images: images,
+        image: images.length > 0 ? images[0] : '',
         badge: product.badge || '',
         rating: product.rating || 0,
         colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
@@ -54,7 +57,42 @@ const ProductForm = ({ product, onClose }) => {
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = (event) => {
+        // Create image element to get dimensions
+        const img = new Image();
+        img.onload = () => {
+          // Calculate new dimensions (max 800px width/height, maintain aspect ratio)
+          const maxSize = 800;
+          let { width, height } = img;
+
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+
+          // Create canvas and resize
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+
+          // Draw image on canvas
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with reduced quality
+          const compressedDataURL = canvas.toDataURL('image/jpeg', 0.8);
+
+          resolve(compressedDataURL);
+        };
+        img.src = event.target.result;
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
@@ -63,26 +101,32 @@ const ProductForm = ({ product, onClose }) => {
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     const imagePromises = files.map(file => convertFileToBase64(file));
-    const images = await Promise.all(imagePromises);
+    const newImages = await Promise.all(imagePromises);
 
-    setFormData(prev => ({
-      ...prev,
-      images: [...(prev.images || []), ...images],
-      image: images[0] // Set first image as main image for backward compatibility
-    }));
+    setFormData(prev => {
+      const updatedImages = [...(prev.images || []), ...newImages];
+      return {
+        ...prev,
+        images: updatedImages,
+        image: updatedImages[0]
+      };
+    });
   };
 
   const handleDrop = async (e) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
     const imagePromises = files.map(file => convertFileToBase64(file));
-    const images = await Promise.all(imagePromises);
+    const newImages = await Promise.all(imagePromises);
 
-    setFormData(prev => ({
-      ...prev,
-      images: [...(prev.images || []), ...images],
-      image: prev.image || images[0] // Set first image as main if not set
-    }));
+    setFormData(prev => {
+      const updatedImages = [...(prev.images || []), ...newImages];
+      return {
+        ...prev,
+        images: updatedImages,
+        image: updatedImages[0]
+      };
+    });
   };
 
   const removeImage = (index) => {
@@ -91,7 +135,7 @@ const ProductForm = ({ product, onClose }) => {
       return {
         ...prev,
         images: newImages,
-        image: index === 0 && newImages.length > 0 ? newImages[0] : prev.image
+        image: newImages.length > 0 ? newImages[0] : ''
       };
     });
   };
@@ -103,7 +147,7 @@ const ProductForm = ({ product, onClose }) => {
     try {
       // Validate required fields
       if (!formData.name || !formData.category || !formData.price || !formData.images || formData.images.length === 0) {
-        alert('Iltimos, barcha majburiy maydonlarni to\'ldiring va kamida bitta rasm yuklang!');
+        toast.error('Iltimos, barcha majburiy maydonlarni to\'ldiring va kamida bitta rasm yuklang!', { duration: 6000 });
         return;
       }
 
@@ -117,17 +161,17 @@ const ProductForm = ({ product, onClose }) => {
       if (product) {
         // Update existing product
         updateProduct(product.id, processedData);
-        alert('Mahsulot muvaffaqiyatli yangilandi!');
+        toast.success('Mahsulot muvaffaqiyatli yangilandi!', { duration: 6000 });
       } else {
         // Add new product
         addProduct(processedData);
-        alert('Mahsulot muvaffaqiyatli qo\'shildi!');
+        toast.success('Mahsulot muvaffaqiyatli qo\'shildi!', { duration: 6000 });
       }
 
       onClose();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+      toast.error('Xatolik yuz berdi. Qaytadan urinib ko\'ring.', { duration: 6000 });
     } finally {
       setIsSubmitting(false);
     }

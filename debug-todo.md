@@ -1,4 +1,0 @@
-- [x] Analyze current modal structure and identify problematic classes
-- [ ] Replace w-screen h-screen classes with centered dialog classes
-- [ ] Add max-width, max-height, and scrollable behavior
-- [ ] Test the modal appearance and functionality

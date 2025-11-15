@@ -36,7 +36,7 @@ const Hero = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
-            to="/#new-collection"
+            to="/products"
             className="inline-flex items-center px-8 py-4 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             Kolleksiyani ko'rish

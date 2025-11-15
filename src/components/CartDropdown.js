@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useCart } from '../contexts/CartContext';
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
 
@@ -20,7 +21,7 @@ const CartDropdown = ({ isOpen, onClose }) => {
     // For now, just close the dropdown
     // In a real app, this would navigate to checkout
     onClose();
-    alert('Checkout funksiyasi tez orada qo\'shiladi! 🚀');
+    toast('Checkout funksiyasi tez orada qo\'shiladi! 🚀', { duration: 6000 });
   };
 
   const handleOverlayClick = (e) => {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send, Mail, Phone, User, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Mail, Phone, User, MessageSquare, CheckCircle, XCircle, X } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +8,23 @@ const Contact = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
+
+  // Auto-hide toasts
+  useEffect(() => {
+    if (showSuccessToast) {
+      const timer = setTimeout(() => setShowSuccessToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessToast]);
+
+  useEffect(() => {
+    if (showErrorToast) {
+      const timer = setTimeout(() => setShowErrorToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showErrorToast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,6 +34,51 @@ const Contact = () => {
     }));
   };
 
+  // Function to send message to Telegram bot
+  const sendToTelegram = async (name, phone, message) => {
+    const botToken = '8322963763:AAH3M-up83trqTZMkFxwLLwjDPE6A-wn6FA';
+    const chatId = '701571129';
+    const timestamp = new Date().toLocaleString('uz-UZ', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const telegramMessage = `
+🔔 *Yangi xabar LUXE Fashion dan!*
+
+👤 *Ism:* ${name}
+📱 *Telefon:* ${phone}
+💬 *Xabar:* ${message}
+
+⏰ *Vaqt:* ${timestamp}
+📍 *Sayt:* luxefashion.uz
+
+_Vaqtli javob berib qolamiz!_
+    `.trim();
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: telegramMessage,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Telegram API error');
+    }
+
+    return response.json();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -24,32 +86,36 @@ const Contact = () => {
     try {
       // Validation
       if (!formData.name.trim()) {
-        alert('Iltimos, ismingizni kiriting!');
+        setShowErrorToast(true);
+        setIsSubmitting(false);
         return;
       }
 
       if (!formData.phone.trim()) {
-        alert('Iltimos, telefon raqamingizni kiriting!');
+        setShowErrorToast(true);
+        setIsSubmitting(false);
         return;
       }
 
       if (!formData.message.trim()) {
-        alert('Iltimos, xabaringizni kiriting!');
+        setShowErrorToast(true);
+        setIsSubmitting(false);
         return;
       }
 
       // Phone number validation (basic)
       const phoneRegex = /^[\+]?[0-9\-\s\(\)]{7,15}$/;
       if (!phoneRegex.test(formData.phone.trim())) {
-        alert('Iltimos, to\'g\'ri telefon raqamini kiriting!');
+        setShowErrorToast(true);
+        setIsSubmitting(false);
         return;
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Send to Telegram
+      await sendToTelegram(formData.name.trim(), formData.phone.trim(), formData.message.trim());
 
       // Success
-      alert(`Rahmat, ${formData.name}! Sizning xabaringiz muvaffaqiyatli yuborildi. Tez orada siz bilan bog'lanamiz! 📞`);
+      setShowSuccessToast(true);
 
       // Reset form
       setFormData({
@@ -60,7 +126,7 @@ const Contact = () => {
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+      setShowErrorToast(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,7 +159,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="text-white font-medium">Telefon</p>
-                    <p className="text-gray-400">+998 90 123 45 67</p>
+                    <p className="text-gray-400">+998 88 429 99 69</p>
                   </div>
                 </div>
 
@@ -103,7 +169,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="text-white font-medium">Email</p>
-                    <p className="text-gray-400">info@luxury.uz</p>
+                    <p className="text-gray-400">akbarnazarov109@gmail.com</p>
                   </div>
                 </div>
 
@@ -113,7 +179,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="text-white font-medium">Ish vaqti</p>
-                    <p className="text-gray-400">Du-Sha: 9:00 - 18:00</p>
+                    <p className="text-gray-400">Har kuni: 9:00 - 22:00</p>
                   </div>
                 </div>
               </div>
@@ -127,7 +193,7 @@ const Contact = () => {
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0"></div>
-                  <span>24/48 soat ichida yetkazish</span>
+                  <span>3/6 soat ichida yetkazish</span>
                 </li>
                 <li className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0"></div>
@@ -229,6 +295,40 @@ const Contact = () => {
           </div>
         </div>
       </div>
+
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3 animate-in slide-in-from-bottom-2">
+          <CheckCircle className="w-6 h-6 flex-shrink-0" />
+          <div>
+            <p className="font-medium">Xabar muvaffaqiyatli yuborildi!</p>
+            <p className="text-sm opacity-90">Siz bilan tez orada bog'lanamiz</p>
+          </div>
+          <button
+            onClick={() => setShowSuccessToast(false)}
+            className="flex-shrink-0 hover:bg-black/20 rounded-full p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {showErrorToast && (
+        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3 animate-in slide-in-from-bottom-2">
+          <XCircle className="w-6 h-6 flex-shrink-0" />
+          <div>
+            <p className="font-medium">Xatolik yuz berdi! Iltimos formatni to'liq to'ldiring</p>
+            <p className="text-sm opacity-90">Yoki birozdan keyin urinib ko'ring</p>
+          </div>
+          <button
+            onClick={() => setShowErrorToast(false)}
+            className="flex-shrink-0 hover:bg-black/20 rounded-full p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </section>
   );
 };

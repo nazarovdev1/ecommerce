@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 // Cart reducer for state management
 const cartReducer = (state, action) => {
@@ -26,7 +27,7 @@ const cartReducer = (state, action) => {
         newItems = [...state.items, action.payload];
       }
 
-      localStorage.setItem('cart', JSON.stringify(newItems));
+      localStorage.setItem(action.userId ? `cart_${action.userId}` : 'cart', JSON.stringify(newItems));
       return {
         ...state,
         items: newItems,
@@ -38,7 +39,7 @@ const cartReducer = (state, action) => {
           ? { ...item, quantity: Math.max(1, action.payload.quantity) }
           : item
       );
-      localStorage.setItem('cart', JSON.stringify(updatedItems));
+      localStorage.setItem(action.userId ? `cart_${action.userId}` : 'cart', JSON.stringify(updatedItems));
       return {
         ...state,
         items: updatedItems,
@@ -46,14 +47,14 @@ const cartReducer = (state, action) => {
       };
     case 'REMOVE_FROM_CART':
       const filteredItems = state.items.filter(item => item.id !== action.payload);
-      localStorage.setItem('cart', JSON.stringify(filteredItems));
+      localStorage.setItem(action.userId ? `cart_${action.userId}` : 'cart', JSON.stringify(filteredItems));
       return {
         ...state,
         items: filteredItems,
         totalItems: filteredItems.reduce((sum, item) => sum + item.quantity, 0)
       };
     case 'CLEAR_CART':
-      localStorage.removeItem('cart');
+      localStorage.removeItem(action.userId ? `cart_${action.userId}` : 'cart');
       return {
         ...state,
         items: [],
@@ -72,21 +73,26 @@ const initialState = {
 };
 
 export const CartProvider = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount and when user changes
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
+    const cartKey = user ? `cart_${user.id}` : 'cart';
+    const savedCart = localStorage.getItem(cartKey);
     if (savedCart) {
       try {
         const cartItems = JSON.parse(savedCart);
         dispatch({ type: 'LOAD_CART', payload: cartItems });
       } catch (error) {
         console.error('Error loading cart:', error);
-        localStorage.removeItem('cart');
+        localStorage.removeItem(cartKey);
       }
+    } else {
+      // Clear cart if no saved cart for this user
+      dispatch({ type: 'LOAD_CART', payload: [] });
     }
-  }, []);
+  }, [user]);
 
   const addToCart = (product, selectedColor, selectedSize, quantity = 1) => {
     const cartItem = {
@@ -101,19 +107,19 @@ export const CartProvider = ({ children }) => {
       addedAt: new Date().toISOString()
     };
 
-    dispatch({ type: 'ADD_TO_CART', payload: cartItem });
+    dispatch({ type: 'ADD_TO_CART', payload: cartItem, userId: user?.id });
   };
 
   const updateQuantity = (itemId, quantity) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { id: itemId, quantity } });
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { id: itemId, quantity }, userId: user?.id });
   };
 
   const removeFromCart = (itemId) => {
-    dispatch({ type: 'REMOVE_FROM_CART', payload: itemId });
+    dispatch({ type: 'REMOVE_FROM_CART', payload: itemId, userId: user?.id });
   };
 
   const clearCart = () => {
-    dispatch({ type: 'CLEAR_CART' });
+    dispatch({ type: 'CLEAR_CART', userId: user?.id });
   };
 
   const getCartTotal = () => {
